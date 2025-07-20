@@ -21,10 +21,4 @@ public class InverterManufacturer {
 
     private String portalUrl;
 
-    @OneToMany(mappedBy = "inverterManufacturer")
-    private List<Inverter> inverters;
-
-    @OneToMany(mappedBy = "inverterManufacturer")
-    private List<Plant> plants;
-
 }

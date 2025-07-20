@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,6 +32,6 @@ public class Inverter {
     private InverterManufacturer inverterManufacturer;
 
     @OneToMany(mappedBy = "inverter", cascade = CascadeType.ALL)
-    private List<MonthlyData> monthlyData;
+    private List<MonthlyData> monthlyData = new ArrayList<>();
 
 }

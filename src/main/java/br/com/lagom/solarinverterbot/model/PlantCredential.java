@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,5 +24,13 @@ public class PlantCredential {
     private String password;
 
     @OneToMany(mappedBy = "credential", cascade = CascadeType.ALL)
-    private List<Plant> plants;
+    private List<Plant> plants = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "client_id")
+    private Client client;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "inverter_manufacturer_id")
+    private InverterManufacturer manufacturer;
 }

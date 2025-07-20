@@ -15,7 +15,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("""
     select distinct c
         from Client c
-            join c.plantList p
+            join c.plants p
                 join p.inverterList i
                     where i.inverterManufacturer.id = :manufacturerId
     """)
@@ -25,12 +25,14 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("""
     select c
         from Client c
-            join c.plantList p
+            join c.plants p
                 join p.inverterManufacturer im
                     where im.id = :manufacturerId
                         and c.id = :clientId
 
     """)
     Optional<Client> findByIdAndManufacturerId(Long clientId, Long manufacturerId);
+
+    Optional<Client> findByNameIgnoreCase(String name);
 
 }

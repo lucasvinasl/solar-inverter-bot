@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,7 +31,10 @@ public class Client {
 
     private String phone;
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
-    private List<Plant> plantList;
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Plant> plants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PlantCredential> credentials = new ArrayList<>();
 
 }

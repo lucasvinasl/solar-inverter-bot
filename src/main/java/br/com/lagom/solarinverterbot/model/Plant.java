@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,8 +33,8 @@ public class Plant {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @OneToMany(mappedBy = "plant", cascade = CascadeType.ALL)
-    private List<Inverter> inverterList;
+    @OneToMany(mappedBy = "plant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Inverter> inverterList = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "credential_id")
