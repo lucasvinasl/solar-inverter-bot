@@ -2,6 +2,7 @@ package br.com.lagom.solarinverterbot.service;
 
 import br.com.lagom.solarinverterbot.model.Client;
 import br.com.lagom.solarinverterbot.model.InverterManufacturer;
+import br.com.lagom.solarinverterbot.model.Plant;
 import br.com.lagom.solarinverterbot.repository.InverterManufacturerRepository;
 import br.com.lagom.solarinverterbot.scraper.GrowattElementMap;
 import br.com.lagom.solarinverterbot.scraper.PortalScraper;
@@ -37,7 +38,7 @@ public class GrowattScraperService implements PortalScraper {
             + File.separator + "SpreadsheetAutomation" + File.separator + "growatt_spreadsheets";
     private static final ZoneId LOCAL_ZONE_ID = ZoneId.of("America/Fortaleza");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss");
-    private final List<Client> unprocessedClients = new CopyOnWriteArrayList<>();
+    private final List<Plant> unprocessedPlants = new CopyOnWriteArrayList<>();
     private static final int MAX_ATTEMPTS = 2;
 
     @Autowired
@@ -61,30 +62,30 @@ public class GrowattScraperService implements PortalScraper {
     }
 
     @Override
-    public void webScrapingService(Client client) {
+    public void webScrapingService(Plant plant) {
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                doWebScraping(client);
+                doWebScraping(plant);
                 return;
             } catch (Exception ex) {
-                log.error("Tentativa {}/{} falhou para cliente {}: {}",
-                        attempt, MAX_ATTEMPTS, client.getName(), ex.getMessage(), ex);
+                log.error("Tentativa {}/{} falhou  - planta {}: {}",
+                        attempt, MAX_ATTEMPTS, plant.getName(), ex.getMessage(), ex);
 
                 if (attempt == MAX_ATTEMPTS) {
-                    unprocessedClients.add(client);
-                    log.warn("Cliente {} marcado como NÃO PROCESSADO.", client.getName());
+                    unprocessedPlants.add(plant);
+                    log.warn("Planta {} - NÃO PROCESSADA.", plant.getName());
                 } else {
-                    log.info("Nova tentativa para o cliente {}", client.getName());
+                    log.info("Nova tentativa - Planta {}", plant.getName());
                 }
             }
         }
     }
 
 
-    private void doWebScraping(Client client) throws Exception {
+    private void doWebScraping(Plant plant) throws Exception {
 
-        String downloadDir = BASE_DOWNLOAD_PATH + File.separator + clientNameClean(client.getName());
+        String downloadDir = BASE_DOWNLOAD_PATH + File.separator + clientNameClean(plant.getClient().getName());
         createDirectoryIfNotExists(downloadDir);
 
         ChromeOptions options = buildChromeOptions(downloadDir);
@@ -96,7 +97,7 @@ public class GrowattScraperService implements PortalScraper {
             driver.manage().window().maximize();
 
             GrowattElementMap map = new GrowattElementMap();
-            login(client, driver, map);
+            login(plant, driver, map);
 
             try {
                 plantsLits(driver, map);
@@ -220,18 +221,19 @@ public class GrowattScraperService implements PortalScraper {
     }
 
 
-    private void login(Client client, WebDriver driver, GrowattElementMap webElementMapped) throws InterruptedException {
+    private void login(Plant plant, WebDriver driver, GrowattElementMap webElementMapped) throws InterruptedException {
         webElementMapped.waitAndMapLoginElements(driver, Duration.ofSeconds(10));
-
-        webElementMapped.usernameInput.sendKeys(client.getUsername());
-        webElementMapped.passwordInput.sendKeys(client.getPassword());
+        String username = plant.getCredential().getUsername();
+        String password = plant.getCredential().getPassword();
+        webElementMapped.usernameInput.sendKeys(username);
+        webElementMapped.passwordInput.sendKeys(password);
 
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", webElementMapped.loginButton);
         Thread.sleep(2000);
         webElementMapped.loginButton.click();
         Thread.sleep(2000);
 
-        log.info("Login efetuado com sucesso! \n Cliente: {} - Portal: {}", client.getName(), client.getInverterManufacturer().getName());
+        log.info("Login efetuado com sucesso! \n Planta: {} - Portal: {}", plant.getName(), plant.getInverterManufacturer().getName());
     }
 
     // verificar se tem mais de uma planta ou mais de um inversor no caso de Ethan

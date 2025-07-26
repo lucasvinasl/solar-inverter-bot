@@ -8,9 +8,9 @@ import java.io.Serializable;
 
 @Builder
 @Jacksonized
-public record PlantsToScrapingRequestDTO(
-        Long plantId,
+public record QueueEntryCreateRequestDTO(
         Long manufacturerId,
-        StarterTypeEnum starterType
+        StarterTypeEnum starterType,
+        Long creatorId
 ) implements Serializable {
 }
