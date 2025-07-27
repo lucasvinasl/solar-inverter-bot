@@ -31,6 +31,10 @@ public class Client {
 
     private String phone;
 
+//    @ManyToOne
+//    @JoinColumn(name = "company_id", nullable = false)
+//    private Company company;
+
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Plant> plants = new ArrayList<>();
 

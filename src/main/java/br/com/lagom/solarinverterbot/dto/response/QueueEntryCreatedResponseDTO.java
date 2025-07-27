@@ -1,4 +1,4 @@
-package br.com.lagom.solarinverterbot.dto;
+package br.com.lagom.solarinverterbot.dto.response;
 
 public record QueueEntryCreatedResponseDTO(
         String manufacturerName,

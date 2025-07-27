@@ -1,12 +1,12 @@
 package br.com.lagom.solarinverterbot.service;
 
-import br.com.lagom.solarinverterbot.async.PlantQueueEntry;
-import br.com.lagom.solarinverterbot.async.PlantQueueEntryRepository;
-import br.com.lagom.solarinverterbot.async.QueueEntry;
-import br.com.lagom.solarinverterbot.async.QueueEntryRepository;
-import br.com.lagom.solarinverterbot.dto.QueueEntryCreateRequestDTO;
+import br.com.lagom.solarinverterbot.scraper.PlantQueueEntry;
+import br.com.lagom.solarinverterbot.scraper.PlantQueueEntryRepository;
+import br.com.lagom.solarinverterbot.scraper.QueueEntry;
+import br.com.lagom.solarinverterbot.scraper.QueueEntryRepository;
+import br.com.lagom.solarinverterbot.dto.request.QueueEntryCreateRequestDTO;
 import br.com.lagom.solarinverterbot.dto.PortalPlantCredentialImportDTO;
-import br.com.lagom.solarinverterbot.dto.QueueEntryCreatedResponseDTO;
+import br.com.lagom.solarinverterbot.dto.response.QueueEntryCreatedResponseDTO;
 import br.com.lagom.solarinverterbot.enums.StarterTypeEnum;
 import br.com.lagom.solarinverterbot.enums.StatusPlantQueueEnum;
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
@@ -121,8 +121,8 @@ public class AutomationService {
     }
 
 
-    public PortalPlantCredentialImportDTO updateSpreadsheetClients(){
+    public PortalPlantCredentialImportDTO updateSpreadsheetClients(Company company){
         File file = new File("C:/Users/usuario/Documents/SpreadsheetAutomation/Client_Credentials_By_Manufacturer.xlsx");
-        return portalPlantCredentialImportService.importClientsCredentials(file);
+        return portalPlantCredentialImportService.importClientsCredentials(file, company);
     }
 }

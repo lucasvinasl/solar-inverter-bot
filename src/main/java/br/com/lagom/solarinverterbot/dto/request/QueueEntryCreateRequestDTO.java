@@ -1,4 +1,4 @@
-package br.com.lagom.solarinverterbot.dto;
+package br.com.lagom.solarinverterbot.dto.request;
 
 import br.com.lagom.solarinverterbot.enums.StarterTypeEnum;
 import lombok.Builder;

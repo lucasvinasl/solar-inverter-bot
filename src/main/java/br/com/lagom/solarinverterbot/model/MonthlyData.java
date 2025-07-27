@@ -18,6 +18,9 @@ public class MonthlyData {
     @Column(nullable = false)
     private Integer year;
 
+    @Column(nullable = false)
+    private Double totalGeneration;
+
     @Column(name = "january", nullable = false)
     private Double january;
 

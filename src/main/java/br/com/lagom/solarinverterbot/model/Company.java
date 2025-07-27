@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -24,18 +26,26 @@ public class Company {
     private String nameByUser;
 
     @NotNull
-    private String register_name;
+    private String registerName;
 
     @NotNull
     private boolean active;
 
-    @NotNull
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserAccount> users = new HashSet<>();
 
-    @NotNull
-    private ZonedDateTime createdAt;
+//    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Client> clients = new ArrayList<>();
 
+    @NotNull
+    private ZonedDateTime createdAt = ZonedDateTime.now();
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = ZonedDateTime.now();
+        }
+    }
 
 
 }

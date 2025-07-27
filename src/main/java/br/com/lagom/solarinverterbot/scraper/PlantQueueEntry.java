@@ -1,4 +1,4 @@
-package br.com.lagom.solarinverterbot.async;
+package br.com.lagom.solarinverterbot.scraper;
 
 import br.com.lagom.solarinverterbot.enums.StatusPlantQueueEnum;
 import br.com.lagom.solarinverterbot.model.Plant;

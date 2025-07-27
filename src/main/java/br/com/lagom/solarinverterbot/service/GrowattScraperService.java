@@ -1,11 +1,13 @@
 package br.com.lagom.solarinverterbot.service;
 
-import br.com.lagom.solarinverterbot.model.Client;
+import br.com.lagom.solarinverterbot.spreadsheet.SheetQueueEntry;
+import br.com.lagom.solarinverterbot.spreadsheet.SheetQueueEntryRepository;
 import br.com.lagom.solarinverterbot.model.InverterManufacturer;
 import br.com.lagom.solarinverterbot.model.Plant;
 import br.com.lagom.solarinverterbot.repository.InverterManufacturerRepository;
 import br.com.lagom.solarinverterbot.scraper.GrowattElementMap;
 import br.com.lagom.solarinverterbot.scraper.PortalScraper;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -42,18 +44,20 @@ public class GrowattScraperService implements PortalScraper {
     private static final int MAX_ATTEMPTS = 2;
 
     @Autowired
-    private EnergyYearlyDataRepository energyYearlyDataRepository;
+    private SheetQueueEntryRepository sheetQueueEntryRepository;
 
     @Autowired
-    private ProcessingQueueEntryRepository processingQueueEntryRepository;
+    private InverterManufacturerRepository inverterManufacturerRepository;
 
-    @Autowired
-    private static InverterManufacturerRepository inverterManufacturerRepository;
-
-    private static InverterManufacturer url = inverterManufacturerRepository.findByNameIgnoreCase("GROWATT")
-            .orElseThrow(() -> new EntityNotFoundException("GROWATT NÃO CADASTRADO."));
-
-    private static final String URL_GROWATT = url.getPortalUrl();
+    private InverterManufacturer url;
+    private String URL_GROWATT;
+    
+    @PostConstruct
+    public void init() {
+        this.url = inverterManufacturerRepository.findByNameIgnoreCase("GROWATT")
+                .orElseThrow(() -> new EntityNotFoundException("GROWATT NÃO CADASTRADO."));
+        this.URL_GROWATT = url.getPortalUrl();
+    }
 
     @Override
     public boolean isPortalAvailable(String manufacturerName) {
@@ -85,7 +89,7 @@ public class GrowattScraperService implements PortalScraper {
 
     private void doWebScraping(Plant plant) throws Exception {
 
-        String downloadDir = BASE_DOWNLOAD_PATH + File.separator + clientNameClean(plant.getClient().getName());
+        String downloadDir = BASE_DOWNLOAD_PATH + File.separator + plantCleanName(plant.getClient().getName());
         createDirectoryIfNotExists(downloadDir);
 
         ChromeOptions options = buildChromeOptions(downloadDir);
@@ -116,11 +120,11 @@ public class GrowattScraperService implements PortalScraper {
 
             File file = renameDownloadedFileSimple(downloadDir, Duration.ofSeconds(60));
             if (file != null) {
-                ProcessingQueueEntry entry = new ProcessingQueueEntry(
-                        client, file.getAbsolutePath(), file.getName());
-                processingQueueEntryRepository.save(entry);
-                log.info("Planilha '{}' enfileirada (cliente {}, fila {}).",
-                        entry.getFileName(), client.getName(), entry.getId());
+                SheetQueueEntry entry = new SheetQueueEntry(
+                        plant, file.getAbsolutePath(), file.getName());
+                sheetQueueEntryRepository.save(entry);
+                log.info("Planilha '{}' enfileirada (planta {}, fila {}).",
+                        entry.getFileName(), plant.getName(), entry.getId());
             } else {
                 throw new IllegalStateException("Arquivo não baixado/renomeado.");
             }
@@ -145,7 +149,7 @@ public class GrowattScraperService implements PortalScraper {
         return options;
     }
 
-    private String clientNameClean(String name){
+    private String plantCleanName(String name){
         return name.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
     }
 

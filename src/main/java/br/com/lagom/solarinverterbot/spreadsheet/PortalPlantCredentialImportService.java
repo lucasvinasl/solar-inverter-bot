@@ -1,11 +1,9 @@
 package br.com.lagom.solarinverterbot.spreadsheet;
 
 import br.com.lagom.solarinverterbot.dto.PortalPlantCredentialImportDTO;
-import br.com.lagom.solarinverterbot.model.Client;
-import br.com.lagom.solarinverterbot.model.InverterManufacturer;
-import br.com.lagom.solarinverterbot.model.Plant;
-import br.com.lagom.solarinverterbot.model.PlantCredential;
+import br.com.lagom.solarinverterbot.model.*;
 import br.com.lagom.solarinverterbot.repository.ClientRepository;
+import br.com.lagom.solarinverterbot.repository.CompanyRepository;
 import br.com.lagom.solarinverterbot.repository.InverterManufacturerRepository;
 import br.com.lagom.solarinverterbot.repository.PlantCredentialRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,9 +37,13 @@ public class PortalPlantCredentialImportService {
     @Autowired
     private PlantCredentialRepository plantCredentialRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @Transactional
-    public PortalPlantCredentialImportDTO importClientsCredentials(File fileExcel) {
+    public PortalPlantCredentialImportDTO importClientsCredentials(File fileExcel, Company company) {
         List<Client> clientList = new ArrayList<>();
+        Company currentcompany = companyRepository.findById(company.getId()).orElseThrow(() -> new EntityNotFoundException("Company não encontrada."));
         int invalidClient = 0;
         Workbook workbook = null;
 
@@ -91,6 +93,7 @@ public class PortalPlantCredentialImportService {
                                 .orElseGet(() -> {
                                     Client newClient = new Client();
                                     newClient.setName(clientName);
+//                                    newClient.setCompany(currentcompany);
                                     return clientRepository.save(newClient);
                                 });
 
