@@ -1,4 +1,4 @@
-package br.com.lagom.solarinverterbot.spreadsheet;
+package br.com.lagom.solarinverterbot.service;
 
 import br.com.lagom.solarinverterbot.dto.SheetInverterDataConsumerDTO;
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
@@ -6,6 +6,8 @@ import br.com.lagom.solarinverterbot.model.Inverter;
 import br.com.lagom.solarinverterbot.model.MonthlyData;
 import br.com.lagom.solarinverterbot.repository.InverterRepository;
 import br.com.lagom.solarinverterbot.repository.MonthlyDataRepository;
+import br.com.lagom.solarinverterbot.model.SheetGenerationDataQueueEntry;
+import br.com.lagom.solarinverterbot.repository.SheetGenerationDataQueueEntryRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +24,10 @@ import java.util.Optional;
 @Slf4j
 @EnableScheduling
 @Service
-public class SheetQueueEntryService {
+public class SheetGenerationDataQueueEntryService {
 
     @Autowired
-    private SheetQueueEntryRepository sheetQueueEntryRepository;
+    private SheetGenerationDataQueueEntryRepository sheetGenerationDataQueueEntryRepository;
 
     @Autowired
     private GrowattSheetExtractDataService growattSheetExtractDataService;
@@ -41,7 +43,7 @@ public class SheetQueueEntryService {
     public void scheduleSpreadsheetProcessing(){
         log.info("Verificando se há planilhas pendentes");
 
-        List<SheetQueueEntry> sheetQueueEntries = sheetQueueEntryRepository.findTop10ByStatusSheetOrderByCreatedAtAsc(StatusQueueEnum.PENDING);
+        List<SheetGenerationDataQueueEntry> sheetQueueEntries = sheetGenerationDataQueueEntryRepository.findTop10ByStatusSheetOrderByCreatedAtAsc(StatusQueueEnum.PENDING);
 
         if(sheetQueueEntries.isEmpty()){
             log.info("Nenhuma planilha para processar.");
@@ -49,13 +51,13 @@ public class SheetQueueEntryService {
         }
         log.info("Novas {} Planilhas pendentes para processar.", sheetQueueEntries.size());
 
-        for(SheetQueueEntry entry: sheetQueueEntries){
+        for(SheetGenerationDataQueueEntry entry: sheetQueueEntries){
             try{
-                Optional<SheetQueueEntry> optEntry = sheetQueueEntryRepository.findById(entry.getId());
+                Optional<SheetGenerationDataQueueEntry> optEntry = sheetGenerationDataQueueEntryRepository.findById(entry.getId());
                 if(optEntry.isPresent() && optEntry.get().getStatusSheet().equals(StatusQueueEnum.PENDING)){
-                    SheetQueueEntry currentEntry = optEntry.get();
+                    SheetGenerationDataQueueEntry currentEntry = optEntry.get();
                     currentEntry.setStatusSheet(StatusQueueEnum.IN_PROGRESS);
-                    sheetQueueEntryRepository.save(currentEntry);
+                    sheetGenerationDataQueueEntryRepository.save(currentEntry);
                     processSheetAsync(currentEntry.getId());
                 }
 
@@ -69,9 +71,9 @@ public class SheetQueueEntryService {
     @Async("sheetTaskExecutor")
     @Transactional
     public void processSheetAsync(Long entryId){
-       SheetQueueEntry entry = null;
+       SheetGenerationDataQueueEntry entry = null;
         try{
-            Optional<SheetQueueEntry> optEntry = sheetQueueEntryRepository.findById(entryId);
+            Optional<SheetGenerationDataQueueEntry> optEntry = sheetGenerationDataQueueEntryRepository.findById(entryId);
             if (optEntry.isEmpty()) {
                 log.warn("Entrada da fila com ID {} não encontrada ou já removida. Pode ter sido processada por outra thread.", entryId);
                 return;
@@ -104,7 +106,7 @@ public class SheetQueueEntryService {
         }
     }
 
-    private void populateEnergyData(List<SheetInverterDataConsumerDTO> allInverters, SheetQueueEntry entry) {
+    private void populateEnergyData(List<SheetInverterDataConsumerDTO> allInverters, SheetGenerationDataQueueEntry entry) {
         for (SheetInverterDataConsumerDTO inverterData : allInverters) {
             Long plantId = entry.getPlant().getId();
             String serial = inverterData.getSerialNumber();

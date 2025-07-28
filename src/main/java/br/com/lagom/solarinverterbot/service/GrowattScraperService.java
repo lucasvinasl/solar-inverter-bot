@@ -1,7 +1,7 @@
 package br.com.lagom.solarinverterbot.service;
 
-import br.com.lagom.solarinverterbot.spreadsheet.SheetQueueEntry;
-import br.com.lagom.solarinverterbot.spreadsheet.SheetQueueEntryRepository;
+import br.com.lagom.solarinverterbot.model.SheetGenerationDataQueueEntry;
+import br.com.lagom.solarinverterbot.repository.SheetGenerationDataQueueEntryRepository;
 import br.com.lagom.solarinverterbot.model.InverterManufacturer;
 import br.com.lagom.solarinverterbot.model.Plant;
 import br.com.lagom.solarinverterbot.repository.InverterManufacturerRepository;
@@ -44,7 +44,7 @@ public class GrowattScraperService implements PortalScraper {
     private static final int MAX_ATTEMPTS = 2;
 
     @Autowired
-    private SheetQueueEntryRepository sheetQueueEntryRepository;
+    private SheetGenerationDataQueueEntryRepository sheetGenerationDataQueueEntryRepository;
 
     @Autowired
     private InverterManufacturerRepository inverterManufacturerRepository;
@@ -120,9 +120,9 @@ public class GrowattScraperService implements PortalScraper {
 
             File file = renameDownloadedFileSimple(downloadDir, Duration.ofSeconds(60));
             if (file != null) {
-                SheetQueueEntry entry = new SheetQueueEntry(
+                SheetGenerationDataQueueEntry entry = new SheetGenerationDataQueueEntry(
                         plant, file.getAbsolutePath(), file.getName());
-                sheetQueueEntryRepository.save(entry);
+                sheetGenerationDataQueueEntryRepository.save(entry);
                 log.info("Planilha '{}' enfileirada (planta {}, fila {}).",
                         entry.getFileName(), plant.getName(), entry.getId());
             } else {

@@ -1,4 +1,4 @@
-package br.com.lagom.solarinverterbot.spreadsheet;
+package br.com.lagom.solarinverterbot.service;
 
 import br.com.lagom.solarinverterbot.dto.SheetInverterDataConsumerDTO;
 import br.com.lagom.solarinverterbot.repository.InverterManufacturerRepository;

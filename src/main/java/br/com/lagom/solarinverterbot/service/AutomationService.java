@@ -1,37 +1,32 @@
 package br.com.lagom.solarinverterbot.service;
 
-import br.com.lagom.solarinverterbot.scraper.PlantQueueEntry;
-import br.com.lagom.solarinverterbot.scraper.PlantQueueEntryRepository;
-import br.com.lagom.solarinverterbot.scraper.QueueEntry;
-import br.com.lagom.solarinverterbot.scraper.QueueEntryRepository;
+import br.com.lagom.solarinverterbot.model.PlantQueueEntry;
+import br.com.lagom.solarinverterbot.repository.PlantQueueEntryRepository;
+import br.com.lagom.solarinverterbot.model.PortalQueueEntry;
+import br.com.lagom.solarinverterbot.repository.PortalQueueEntryRepository;
 import br.com.lagom.solarinverterbot.dto.request.QueueEntryCreateRequestDTO;
-import br.com.lagom.solarinverterbot.dto.PortalPlantCredentialImportDTO;
 import br.com.lagom.solarinverterbot.dto.response.QueueEntryCreatedResponseDTO;
 import br.com.lagom.solarinverterbot.enums.StarterTypeEnum;
 import br.com.lagom.solarinverterbot.enums.StatusPlantQueueEnum;
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
 import br.com.lagom.solarinverterbot.model.*;
-import br.com.lagom.solarinverterbot.spreadsheet.PortalPlantCredentialImportService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.List;
 
 @Slf4j
 @Service
 public class AutomationService {
 
-    @Autowired
-    private PortalPlantCredentialImportService portalPlantCredentialImportService;
 
     @Autowired
     private PlantService plantService;
 
     @Autowired
-    private QueueEntryRepository queueEntryRepository;
+    private PortalQueueEntryRepository portalQueueEntryRepository;
 
     @Autowired
     private UserAccountService userAccountService;
@@ -64,7 +59,7 @@ public class AutomationService {
         List<Plant> toScraping = plantsToScraping(form);
         checkIsValidCreateQueue(form.creatorId(), form.manufacturerId());
         try{
-            QueueEntry entry = createQueueEntry(form, toScraping);
+            PortalQueueEntry entry = createQueueEntry(form, toScraping);
             return new QueueEntryCreatedResponseDTO(entry.getInverterManufacturer().getName(), toScraping.size());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -79,7 +74,7 @@ public class AutomationService {
             enquanto essa fila estiver em processamento nenhuma outra deverá ser iniciada pelo mesmo usuário.
 
          */
-        boolean isRunningByUser = queueEntryRepository.isRunningQueueByUser(user.getId());
+        boolean isRunningByUser = portalQueueEntryRepository.isRunningQueueByUser(user.getId());
         if(isRunningByUser){
             throw new RuntimeException("Já existe uma fila para esse usuário em processamento.");
         }
@@ -88,31 +83,31 @@ public class AutomationService {
             o mesmo fabricante ao mesmo tempo.
          */
         Company company = userAccountService.findById(user.getId()).getCompany();
-        boolean isOpenQueueByCompanyAndManufacturer = queueEntryRepository.
+        boolean isOpenQueueByCompanyAndManufacturer = portalQueueEntryRepository.
                 isOpenByCompanyIdAndManufacturerId(company.getId(), manufacturer.getId());
         if(isOpenQueueByCompanyAndManufacturer){
             throw new RuntimeException("Já existe uma fila para esse fabricante em processamento.");
         }
     }
 
-    private QueueEntry createQueueEntry(QueueEntryCreateRequestDTO form, List<Plant> plants){
+    private PortalQueueEntry createQueueEntry(QueueEntryCreateRequestDTO form, List<Plant> plants){
 
         try{
-            QueueEntry queueEntry = new QueueEntry();
-            queueEntry.setCreator(userAccountService.findById(form.creatorId()));
-            queueEntry.setInverterManufacturer(inverterManufacturerService.findById(form.manufacturerId()));
-            queueEntry.setStatusQueue(StatusQueueEnum.PENDING);
-            queueEntry = queueEntryRepository.save(queueEntry);
+            PortalQueueEntry portalQueueEntry = new PortalQueueEntry();
+            portalQueueEntry.setCreator(userAccountService.findById(form.creatorId()));
+            portalQueueEntry.setInverterManufacturer(inverterManufacturerService.findById(form.manufacturerId()));
+            portalQueueEntry.setStatusQueue(StatusQueueEnum.PENDING);
+            portalQueueEntry = portalQueueEntryRepository.save(portalQueueEntry);
 
             for(Plant plant: plants){
                 PlantQueueEntry plantQueueEntry = new PlantQueueEntry();
-                plantQueueEntry.setQueueEntry(queueEntry);
+                plantQueueEntry.setPortalQueueEntry(portalQueueEntry);
                 plantQueueEntry.setPlant(plant);
                 plantQueueEntry.setStatusPlantQueue(StatusPlantQueueEnum.PENDING);
                 plantQueueEntryRepository.save(plantQueueEntry);
             }
 
-            return queueEntry;
+            return portalQueueEntry;
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -120,9 +115,4 @@ public class AutomationService {
 
     }
 
-
-    public PortalPlantCredentialImportDTO updateSpreadsheetClients(Company company){
-        File file = new File("C:/Users/usuario/Documents/SpreadsheetAutomation/Client_Credentials_By_Manufacturer.xlsx");
-        return portalPlantCredentialImportService.importClientsCredentials(file, company);
-    }
 }

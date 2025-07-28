@@ -1,7 +1,6 @@
-package br.com.lagom.solarinverterbot.scraper;
+package br.com.lagom.solarinverterbot.model;
 
 import br.com.lagom.solarinverterbot.enums.StatusPlantQueueEnum;
-import br.com.lagom.solarinverterbot.model.Plant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,8 +21,8 @@ public class PlantQueueEntry {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "queue_entry_id", nullable = false)
-    private QueueEntry queueEntry;
+    @JoinColumn(name = "portal_queue_entry_id", nullable = false)
+    private PortalQueueEntry portalQueueEntry;
 
     @NotNull
     @ManyToOne

@@ -1,8 +1,6 @@
-package br.com.lagom.solarinverterbot.scraper;
+package br.com.lagom.solarinverterbot.model;
 
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
-import br.com.lagom.solarinverterbot.model.InverterManufacturer;
-import br.com.lagom.solarinverterbot.model.UserAccount;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,7 +13,7 @@ import java.time.ZonedDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueueEntry {
+public class PortalQueueEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

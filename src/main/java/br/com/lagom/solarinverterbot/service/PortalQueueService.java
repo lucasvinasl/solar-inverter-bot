@@ -1,9 +1,13 @@
-package br.com.lagom.solarinverterbot.scraper;
+package br.com.lagom.solarinverterbot.service;
 
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
 import br.com.lagom.solarinverterbot.model.InverterManufacturer;
 import br.com.lagom.solarinverterbot.model.Plant;
-import br.com.lagom.solarinverterbot.service.GrowattScraperService;
+import br.com.lagom.solarinverterbot.model.PortalQueueEntry;
+import br.com.lagom.solarinverterbot.repository.PlantQueueEntryRepository;
+import br.com.lagom.solarinverterbot.repository.PortalQueueEntryRepository;
+import br.com.lagom.solarinverterbot.model.PlantQueueEntry;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,17 +15,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @Service
-public class QueueService {
+public class PortalQueueService {
 
     @Autowired
     private PlantQueueEntryRepository plantQueueEntryRepository;
 
     @Autowired
-    private QueueEntryRepository queueEntryRepository;
+    private PortalQueueEntryRepository portalQueueEntryRepository;
 
     @Autowired
     private GrowattScraperService growattScraperService;
@@ -30,30 +35,31 @@ public class QueueService {
     public void verifyQueuesToProcess(){
         log.info("Verificando se existem filas pendentes.");
 
-        List<QueueEntry> queueEntryPending = queueEntryRepository.findAllByStatusQueue(StatusQueueEnum.PENDING);
+        List<PortalQueueEntry> portalQueueEntryPending = portalQueueEntryRepository.findAllByStatusQueue(StatusQueueEnum.PENDING);
 
-        if(queueEntryPending.isEmpty()){
+        if(portalQueueEntryPending.isEmpty()){
             log.info("Não há filas pendentes no momento.");
             return;
         }
 
-        for(QueueEntry entry: queueEntryPending){
+        for(PortalQueueEntry entry: portalQueueEntryPending){
             processQueueAsync(entry);
         }
     }
 
     @Async
     @Transactional
-    public void processQueueAsync(QueueEntry entry){
+    public void processQueueAsync(PortalQueueEntry entry){
         log.info("Iniciando processamento da fila: {} ", entry.getId());
         entry.setStatusQueue(StatusQueueEnum.IN_PROGRESS);
-        queueEntryRepository.save(entry);
-        List<PlantQueueEntry> plants = plantQueueEntryRepository.findByQueueEntry(entry);
+        portalQueueEntryRepository.save(entry);
+        List<PlantQueueEntry> plants = Collections.singletonList(plantQueueEntryRepository.findById(entry.getId())
+                .orElseThrow(() -> new EntityNotFoundException("fila não encontrada.")));
         for(PlantQueueEntry plant: plants){
             startScraping(plant.getPlant(), entry.getInverterManufacturer());
         }
         entry.setStatusQueue(StatusQueueEnum.COMPLETED);
-        queueEntryRepository.save(entry);
+        portalQueueEntryRepository.save(entry);
     }
 
     @Async

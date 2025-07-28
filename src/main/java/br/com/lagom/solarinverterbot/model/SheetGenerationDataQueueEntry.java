@@ -1,8 +1,7 @@
-package br.com.lagom.solarinverterbot.spreadsheet;
+package br.com.lagom.solarinverterbot.model;
 
 
 import br.com.lagom.solarinverterbot.enums.StatusQueueEnum;
-import br.com.lagom.solarinverterbot.model.Plant;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +13,7 @@ import java.time.ZonedDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SheetQueueEntry {
+public class SheetGenerationDataQueueEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +40,7 @@ public class SheetQueueEntry {
     private StatusQueueEnum statusSheet;
 
 
-    public SheetQueueEntry(Plant plant, String filePath, String fileName) {
+    public SheetGenerationDataQueueEntry(Plant plant, String filePath, String fileName) {
         this.plant = plant;
         this.filePath = filePath;
         this.fileName = fileName;
